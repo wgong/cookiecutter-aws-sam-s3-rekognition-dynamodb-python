@@ -13,7 +13,8 @@ s3_client = boto3.client('s3')
 dynamo_client = boto3.client('dynamodb')
 
 # Get the table name from the Lambda Environment Variable
-table_name = os.environ['TABLE_NAME']
+## defined in template.yaml
+table_name = "samocrimg67890"   # os.environ['TABLE_NAME']
 
 # --------------- Helper Functions to call Rekognition APIs ------------------
 
@@ -44,16 +45,16 @@ def lambda_handler(event, context):
         textDetections = [text['DetectedText'] for text in response['TextDetections']]
 
         # Log text detected.
-        # for text in textDetections:
-        #    print (text)
+        for text in textDetections:
+           print (text)
 
         # Call rekognition DetectLabels API to detect labels in S3 object.
         response = detect_labels(bucket, key)
         labels = [{label_prediction['Name']: Decimal(str(label_prediction['Confidence']))} for label_prediction in response['Labels']]
         
         # Log labels detected.
-        # for label in labels:
-        #    print (label)
+        for label in labels:
+           print (label)
 
         # Get the timestamp.
         ts = time.time()

@@ -27,29 +27,17 @@ CLI commands to package, deploy and describe outputs defined within the cloudfor
 First, we need an `S3 bucket` where we can upload our Lambda functions packaged as ZIP before we deploy anything - If you don't have a S3 bucket to store code artifacts then this is a good time to create one:
 
 ```bash
-aws s3 mb s3://BUCKET_NAME
+aws s3 mb s3://BUCKET_TO_STORE_CF_TEMPLATE
 ```
 
 Next, run the following command to package your Lambda function. The `sam package` command creates a deployment package (ZIP file) containing your code and dependencies, and uploads them to the S3 bucket you specify. 
 
 ```bash
-sam package \
-    --template-file template.yaml \
-    --output-template-file packaged.yaml \
-    --s3-bucket REPLACE_THIS_WITH_YOUR_S3_BUCKET_NAME
+sam package --template-file template.yaml --output-template-file packaged.yaml --s3-bucket BUCKET_TO_STORE_CF_TEMPLATE
 ```
 
 The `sam deploy` command will create a Cloudformation Stack and deploy your SAM resources.
 ```bash
-sam deploy \
-    --template-file packaged.yaml \
-    --stack-name {{ cookiecutter.project_name.lower().replace(' ', '-') }} \
-    --capabilities CAPABILITY_IAM \
-    --parameter-overrides MyParameterSample=MySampleValue
+sam deploy --template-file packaged.yaml --stack-name aws-samocrimg --capabilities CAPABILITY_IAM
 ```
 
-To see the names of the S3 bucket and DynamoDB table created after deployment, you can use the `aws cloudformation describe-stacks` command.
-```bash
-aws cloudformation describe-stacks \
-    --stack-name {{ cookiecutter.project_name.lower().replace(' ', '-') }} --query 'Stacks[].Outputs'
-```

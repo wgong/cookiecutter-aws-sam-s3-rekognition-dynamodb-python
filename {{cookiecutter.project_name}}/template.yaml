@@ -55,6 +55,16 @@ Resources:
   
   SourceImageBucket:
     Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketName: samocrimg12345
 
   ResultsTable:
     Type: AWS::Serverless::SimpleTable
+    Properties:
+      TableName: samocrimg67890
+      PrimaryKey:
+          Name: id
+          Type: String
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5   
