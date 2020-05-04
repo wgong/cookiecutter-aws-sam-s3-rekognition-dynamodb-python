@@ -9,12 +9,14 @@ import time
 import os
 
 rekognition_client = boto3.client('rekognition')
-s3_client = boto3.client('s3')
-dynamo_client = boto3.client('dynamodb')
+# s3_client = boto3.client('s3')
+# dynamo_client = boto3.client('dynamodb')
 
 # Get the table name from the Lambda Environment Variable
 ## defined in template.yaml
 table_name = "samocrimg67890"   # os.environ['TABLE_NAME']
+table_resource = boto3.resource('dynamodb').Table(table_name)
+
 
 # --------------- Helper Functions to call Rekognition APIs ------------------
 
@@ -33,39 +35,36 @@ def lambda_handler(event, context):
     and store the content in DynamoDB.
     '''
     # Log the the received event locally.
-    # print("Received event: " + json.dumps(event, indent=2))
+    print("Received event: " + json.dumps(event, indent=2))
 
     # Get the object from the event.
     bucket = event['Records'][0]['s3']['bucket']['name']
     key = urllib.parse.unquote_plus(event['Records'][0]['s3']['object']['key'])
+    print(f"bucket={bucket}, key={key}")
 
     try:
         # Call rekognition DetectText API to detect Text in S3 object.
         response = detect_text(bucket, key)
         textDetections = [text['DetectedText'] for text in response['TextDetections']]
-
         # Log text detected.
-        for text in textDetections:
-           print (text)
+        print ("; ".join(textDetections))
 
         # Call rekognition DetectLabels API to detect labels in S3 object.
         response = detect_labels(bucket, key)
-        labels = [{label_prediction['Name']: Decimal(str(label_prediction['Confidence']))} for label_prediction in response['Labels']]
+        labels = [f"label_prediction['Name'] (Decimal(str(label_prediction['Confidence'])))" for label_prediction in response['Labels']]
         
         # Log labels detected.
-        for label in labels:
-           print (label)
+        print ("; ".join(labels))
 
         # Get the timestamp.
         ts = time.time()
         timestamp = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
 
         # Write to DynamoDB.
-        table = boto3.resource('dynamodb').Table(table_name)
         item={'id':key, 'DateTime':timestamp, 'Labels':labels, 'Text':textDetections}
-        table.put_item(Item=item)
+        table_resource.put_item(Item=item)
 
         return 'Success'
+
     except Exception as e:
-        print("Error processing object {} from bucket {}. Event {}".format(key, bucket, json.dumps(event, indent=2)))
-        raise e
+        print(f"Error processing object {key} from bucket {bucket}. Event {json.dumps(event, indent=2)}\n{e}")
