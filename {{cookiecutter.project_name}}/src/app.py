@@ -16,7 +16,7 @@ rekognition_client = boto3.client('rekognition')
 ## defined in template.yaml
 table_name = "samocrimg67890"   # os.environ['TABLE_NAME']
 table_resource = boto3.resource('dynamodb').Table(table_name)
-
+DELIMITOR = " | "
 
 # --------------- Helper Functions to call Rekognition APIs ------------------
 
@@ -35,7 +35,7 @@ def lambda_handler(event, context):
     and store the content in DynamoDB.
     '''
     # Log the the received event locally.
-    print("Received event: " + json.dumps(event, indent=2))
+    # print("Received event: " + json.dumps(event, indent=2))
 
     # Get the object from the event.
     bucket = event['Records'][0]['s3']['bucket']['name']
@@ -47,14 +47,14 @@ def lambda_handler(event, context):
         response = detect_text(bucket, key)
         textDetections = [text['DetectedText'] for text in response['TextDetections']]
         # Log text detected.
-        print ("; ".join(textDetections))
+        print (DELIMITOR.join(textDetections))
 
         # Call rekognition DetectLabels API to detect labels in S3 object.
         response = detect_labels(bucket, key)
-        labels = [f"label_prediction['Name'] (Decimal(str(label_prediction['Confidence'])))" for label_prediction in response['Labels']]
+        labels = [f"{label_prediction['Name']} : {Decimal(str(label_prediction['Confidence']))}" for label_prediction in response['Labels']]
         
         # Log labels detected.
-        print ("; ".join(labels))
+        print (DELIMITOR.join(labels))
 
         # Get the timestamp.
         ts = time.time()
